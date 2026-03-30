@@ -3,6 +3,5 @@ __pycache__/
 *.pyc
 .env
 divipola_dane.pdf
-*.sql
 .git/
 .vscode/
