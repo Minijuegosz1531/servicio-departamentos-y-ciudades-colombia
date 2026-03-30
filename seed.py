@@ -23,24 +23,40 @@ def parse_sql_values(file_path):
     values_str = insert_match.group(1)
     
     print("Extracting tuples...")
-    # Find everything between ( )
-    # This might fail if there are parentheses inside the strings, but looking at the SQL there aren't any.
-    tuple_pattern = re.compile(r'\((.*?)\)', re.DOTALL)
-    tuples_str_list = tuple_pattern.findall(values_str)
-    
+    # Parse char by char to correctly handle parentheses inside quoted strings
+    # e.g. 'Albán (San José)' would break a naive regex approach
     parsed_data = []
-    print(f"Parsing {len(tuples_str_list)} items...")
-    for t_str in tuples_str_list:
+    i = 0
+    n = len(values_str)
+    while i < n:
+        if values_str[i] != '(':
+            i += 1
+            continue
+        j = i + 1
+        in_quote = False
+        while j < n:
+            c = values_str[j]
+            if in_quote:
+                if c == "'":
+                    if j + 1 < n and values_str[j + 1] == "'":
+                        j += 1  # escaped quote ''
+                    else:
+                        in_quote = False
+            else:
+                if c == "'":
+                    in_quote = True
+                elif c == ')':
+                    break
+            j += 1
+        t_str = values_str[i + 1:j]
         try:
-            # We use ast.literal_eval to safely parse SQL values into Python types (int, str)
-            # Example: 11, 'BOGOTÁ, D.C.'
-            t_val = ast.literal_eval(f"({t_str})")
-            if not isinstance(t_val, tuple):
-                t_val = (t_val,) # In case of single element, which shouldn't happen here
+            t_val = ast.literal_eval(f"({t_str},)")
             parsed_data.append(t_val)
         except Exception as e:
-            print(f"Error parsing snippet '{t_str}': {e}")
-            
+            print(f"Error parsing snippet '{t_str[:60]}': {e}")
+        i = j + 1
+
+    print(f"Parsed {len(parsed_data)} items...")
     return parsed_data
 
 def seed_database_from_sql():
