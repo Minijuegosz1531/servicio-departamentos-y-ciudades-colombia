@@ -5,6 +5,8 @@ from sqlalchemy.orm import Session
 from database import engine, SessionLocal
 import models
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 def parse_sql_values(file_path):
     print(f"Reading file: {file_path}")
     with open(file_path, 'r', encoding='utf-8') as f:
@@ -52,7 +54,7 @@ def seed_database_from_sql():
             return
 
         print("Procesando departamentos.sql...")
-        dept_data = parse_sql_values('departamentos.sql')
+        dept_data = parse_sql_values(os.path.join(BASE_DIR, 'departamentos.sql'))
         for row in dept_data:
             id_dept = int(row[0])
             name = str(row[1])
@@ -63,7 +65,7 @@ def seed_database_from_sql():
         print(f"Insertados {len(dept_data)} departamentos.")
 
         print("Procesando municipios.sql...")
-        mun_data = parse_sql_values('municipios.sql')
+        mun_data = parse_sql_values(os.path.join(BASE_DIR, 'municipios.sql'))
         for row in mun_data:
             id_mun = int(row[0])
             name = str(row[1])
